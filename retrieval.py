@@ -3,8 +3,22 @@ from indexing import indexing
 from langchain_qdrant import QdrantVectorStore
 from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
+import os
 from openai import OpenAI
 load_dotenv()
+
+if 'QDRANT_URL' in st.secrets:
+    # Use secrets from Streamlit Cloud
+    QDRANT_URL = st.secrets["QDRANT_URL"]
+    QDRANT_API_KEY = st.secrets["QDRANT_API_KEY"]
+else:
+    # Use environment variables from .env file for local development
+    QDRANT_URL = os.getenv("QDRANT_URL")
+    QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+qdrant_url =QDRANT_URL
+qdrant_key= QDRANT_API_KEY
+
 
 # # --- Page Configuration ---
 st.set_page_config(page_title="PDF RAG Agent", page_icon="📄")
@@ -36,7 +50,8 @@ if uploaded_file:
             client = OpenAI()
             embedding_model = OpenAIEmbeddings(model="text-embedding-3-large")
             vector_db = QdrantVectorStore.from_existing_collection(
-                url="http://localhost:6333",
+                url=qdrant_url,
+                api_key=qdrant_key,
                 collection_name="PDF_Rag_Agent",
                 embedding=embedding_model
             )

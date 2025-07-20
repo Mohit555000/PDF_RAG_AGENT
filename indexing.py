@@ -5,13 +5,25 @@ from langchain_qdrant import QdrantVectorStore
 import streamlit as st
 from io import BytesIO
 import fitz
+import os
 from langchain.schema import Document
 import qdrant_client 
 load_dotenv()
 
 # Define constants for Qdrant connection
-QDRANT_URL="http://localhost:6333"
+if 'QDRANT_URL' in st.secrets:
+    # Use secrets from Streamlit Cloud
+    QDRANT_URL = st.secrets["QDRANT_URL"]
+    QDRANT_API_KEY = st.secrets["QDRANT_API_KEY"]
+else:
+    # Use environment variables from .env file for local development
+    QDRANT_URL = os.getenv("QDRANT_URL")
+    QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+qdrant_url =QDRANT_URL
+qdrant_key= QDRANT_API_KEY
 QDRANT_COLLECTION_NAME="PDF_Rag_Agent"
+
 @st.cache_resource  
 def indexing(file):
     
@@ -19,7 +31,7 @@ def indexing(file):
     #To delete the old collection from vector DB
     try:
         # 1. To create the qrdant client to interact with the DB
-        qdrant_client_instance=qdrant_client.QdrantClient(url=QDRANT_URL)
+        qdrant_client_instance=qdrant_client.QdrantClient(url=qdrant_url,api_key=qdrant_key)
 
         # 2. To deleting the old collection
         # st.write(f"Deleting the old collection:" '{QDRANT_COLLECTION_NAME}')
@@ -66,7 +78,8 @@ def indexing(file):
     #Using embedding_model create embeddings of split_docs and store in the vector_db
     QdrantVectorStore.from_documents(
         documents=split_docs,
-        url="http://localhost:6333",
+        url=qdrant_url,
+        api_key=qdrant_key,
         collection_name="PDF_Rag_Agent",
         embedding=embedding_model
     )
